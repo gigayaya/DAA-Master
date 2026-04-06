@@ -16,6 +16,7 @@ The plugin provides four skills, each in its own directory under `plugins/DAA-Ma
 | `daa-generate` | Code generation rules per layer (test, action, physical) with pre-output checklist | `SKILL.md` |
 | `daa-review` | Code review checklist (38 items), severity classification (CRITICAL/WARNING/SUGGESTION), report format | `SKILL.md` |
 | `daa-architect` | Project scaffolding templates, scaling patterns (Builder/Adapter/Strategy/Chain), POM migration guide | `SKILL.md` |
+| `daa-install` | Installs DAA knowledge base into a project, updates CLAUDE.md/AGENTS.md/README.md with DAA rule pointers | `SKILL.md` |
 
 Each skill directory has a `SKILL.md` (the entry point with frontmatter metadata) plus supporting `.md` files for detailed reference. Skills reference each other: `daa-generate`, `daa-review`, and `daa-architect` all require `daa-core` as prerequisite context.
 

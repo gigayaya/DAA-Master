@@ -26,18 +26,20 @@ Dependencies flow strictly downward: **Test → Action → Physical**. Layer ski
 | `daa-generate` | Code generation rules per layer with a pre-output checklist to enforce DAA compliance |
 | `daa-review` | 38-item code review checklist with severity classification (CRITICAL / WARNING / SUGGESTION) and structured report format |
 | `daa-architect` | Project scaffolding templates, scaling patterns (Builder, Adapter, Strategy, Chain), and POM-to-DAA migration guide |
+| `daa-install` | Installs DAA knowledge base (`docs/daa_rules/`) into a project and updates CLAUDE.md, AGENTS.md, README.md with DAA rule pointers |
 
 ## Installation
 
 ```bash
-/plugin marketplace add https://github.com/gigayaya/DAA-Cluade-Plugin
-/plugin install DAA-Master@DAA_Cluade_Plugin
+/plugin marketplace add https://github.com/gigayaya/DAA-Master
+/plugin install DAA-Master@DAA_Master
 ```
 
 ## Usage
 
 Once installed, the skills activate automatically based on context. You can also invoke them directly:
 
+- **Install DAA into a project**: Use `daa:daa-install` to add DAA rules and knowledge base to your project
 - **Generate test code**: Ask Claude to write E2E tests and it will follow DAA layer rules
 - **Review existing tests**: Ask Claude to review your test code for DAA compliance
 - **Scaffold a project**: Ask Claude to design a test automation framework structure
@@ -61,10 +63,17 @@ skills/
 │   ├── checklist.md            # 38-item review checklist (TL/AL/PL/CL codes)
 │   ├── scoring.md              # DAA Score (1-10) rubric and report template
 │   └── severity-guide.md       # CRITICAL/WARNING/SUGGESTION classification
-└── daa-architect/
-    ├── SKILL.md                # Framework design overview
-    ├── project-scaffold.md     # Directory structure templates
-    └── scaling-patterns.md     # Builder, Adapter, Strategy, Chain patterns
+├── daa-architect/
+│   ├── SKILL.md                # Framework design overview
+│   ├── project-scaffold.md     # Directory structure templates
+│   └── scaling-patterns.md     # Builder, Adapter, Strategy, Chain patterns
+└── daa-install/
+    ├── SKILL.md                # Installation procedure
+    └── templates/              # Content templates for target project
+        ├── claude-md-section.md
+        ├── agents-md-section.md
+        ├── readme-md-section.md
+        └── docs-daa-rules/     # Knowledge base files (7 files)
 ```
 
 ## License
