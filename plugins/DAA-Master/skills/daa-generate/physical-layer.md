@@ -28,10 +28,10 @@ The Physical Layer must contain:
 
 ### R2: Thin Wrapping
 
-Each method should be a direct, 1-2 line delegation to the underlying library:
+Each method should be a direct, 1-2 line delegation to the underlying library. The method names below mirror the underlying library's API — your own names should reflect your library's vocabulary and your team's conventions, not copy these examples verbatim.
 
 ```
-// API Physical Layer
+// API Physical Layer — wrapping an HTTP client (e.g. requests, httpx, axios)
 APIClient:
     http = requests_library
 
@@ -49,36 +49,31 @@ APIClient:
 ```
 
 ```
-// Web Physical Layer (Playwright/Selenium)
-WebDriver:
+// Web Physical Layer — wrapping a browser driver (e.g. Playwright, Selenium, Cypress)
+// Method names here match Playwright's API; adapt to your driver's semantics
+BrowserDriver:
     page = browser_page_instance
 
-    goto(url):
+    navigate(url):              // Playwright calls this goto(); Selenium uses get()
         page.goto(url)
 
-    fill(selector, text):
+    type_into(selector, text):  // Could also be fill(), send_keys(), setValue()
         page.fill(selector, text)
 
     click(selector):
         page.click(selector)
 
-    get_text(selector):
+    read_text(selector):        // Could also be get_text(), text_content(), innerText()
         return page.text_content(selector)
 
-    get_title():
-        return page.title()
-
-    is_visible(selector):
+    element_visible(selector):
         return page.is_visible(selector)
 
-    get_count(selector):
+    count_elements(selector):
         return page.locator(selector).count()
 
-    wait_for_selector(selector):
+    wait_for(selector):
         page.wait_for_selector(selector)
-
-    get_attribute(selector, attribute):
-        return page.get_attribute(selector, attribute)
 ```
 
 ### R3: One Method Per Primitive
@@ -87,12 +82,12 @@ Each Physical Layer method wraps exactly one primitive operation. Don't combine 
 
 ```
 // BAD — multiple operations in one method
-fill_and_submit(selector, text, submit_button):
+type_and_submit(selector, text, submit_button):
     page.fill(selector, text)
     page.click(submit_button)    // This is a second operation
 
 // GOOD — one operation per method
-fill(selector, text):
+type_into(selector, text):
     page.fill(selector, text)
 
 click(selector):
@@ -107,18 +102,18 @@ The Physical Layer is the ONLY place where the underlying technology is referenc
 - Switching from `requests` to `httpx`? Only Physical Layer changes.
 - Action Layer and Test Layer remain untouched.
 
-Design the Physical Layer interface to be technology-agnostic:
+Design your Physical Layer's interface to be technology-agnostic — the Action Layer should not need to know which library is underneath. When the two libraries have different method names for the same primitive, your wrapper is what normalizes them:
 
 ```
-// Both implementations expose the same interface
-// Action Layer doesn't know (or care) which one is used
+// Two implementations exposing the same interface to the Action Layer
+// The wrapper name (type_into) is your team's choice — the underlying call differs
 
 SeleniumDriver:
-    fill(selector, text):
+    type_into(selector, text):
         self.driver.find_element(By.CSS_SELECTOR, selector).send_keys(text)
 
 PlaywrightDriver:
-    fill(selector, text):
+    type_into(selector, text):
         self.page.fill(selector, text)
 ```
 
@@ -141,8 +136,10 @@ This ensures that when a UI element's selector changes, you update ONE file — 
 
 ## Complete Example
 
+These examples use Python + requests/Playwright naming conventions. The method names here (`goto`, `fill`, `click`) closely mirror Playwright's own API — in your project, use names that make sense for your library and team.
+
 ```
-// Physical Layer — API
+// Physical Layer — API (Python + requests)
 APIClient:
     """Pure execution wrapper for HTTP operations."""
 
@@ -160,34 +157,31 @@ APIClient:
 
 
 // Physical Layer — Web (Playwright)
-PlaywrightDriver:
+BrowserDriver:
     """Pure execution wrapper for browser operations."""
 
     __init__(page):
         self.page = page
 
-    goto(url):
+    navigate(url):
         self.page.goto(url)
 
-    fill(selector, text):
+    type_into(selector, text):
         self.page.fill(selector, text)
 
     click(selector):
         self.page.click(selector)
 
-    get_text(selector):
+    read_text(selector):
         return self.page.text_content(selector)
 
-    get_title():
-        return self.page.title()
-
-    is_visible(selector):
+    element_visible(selector):
         return self.page.is_visible(selector)
 
-    get_count(selector):
+    count_elements(selector):
         return self.page.locator(selector).count()
 
-    wait_for_selector(selector):
+    wait_for(selector):
         self.page.wait_for_selector(selector)
 ```
 
