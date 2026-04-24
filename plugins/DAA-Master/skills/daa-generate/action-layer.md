@@ -138,22 +138,29 @@ These don't need self-verification because they are pure data accessors, not sys
 
 ## Module Organization
 
-Organize Action Layer files by **business domain**, not by technical function:
+The principle: organize Action Layer files by **business domain**, not by technical function.
+The filenames below are one way to express this — adapt them to your project's vocabulary
+and language idioms. What matters is that each file represents a coherent business area, not
+a grab-bag of unrelated technical operations.
 
 ```
-// GOOD — domain-aligned
+// GOOD — domain-aligned (e.g. for an e-commerce project)
 actions/
     user_actions.py          // create_user, delete_user, verify_profile
     cart_actions.py          // add_to_cart, remove_from_cart, verify_count
     checkout_actions.py      // submit_payment, verify_order_confirmation
     search_actions.py        // search_product, apply_filter, verify_results
 
-// BAD — technical grouping
+// BAD — technical grouping (regardless of file names)
 actions/
     api_helpers.py           // mix of unrelated API calls
     ui_utils.py              // mix of unrelated UI operations
     validators.py            // assertions separated from their actions
 ```
+
+The exact filenames are up to the team — `users.py`, `user_flows.py`, `customer_actions.py`
+are all fine if they clearly map to a business domain. The anti-pattern is mixing technical
+groupings (`helpers`, `utils`, `validators`) where business meaning is lost.
 
 ## Deciding Atomic vs Composite
 

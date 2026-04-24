@@ -1,48 +1,47 @@
 # DAA Project Scaffold Template
 
-## Standard Directory Structure
+## Example Directory Structure
+
+The filenames and directory names below are one way to structure a DAA project — adapt them to your project's conventions and language idioms. What matters is that the three layers are **clearly separated** into distinct files or directories, with dependencies flowing only downward.
 
 ```
 project-root/
 │
 ├── lib/                              # Framework core (non-test code)
+│   │                                 # (could also be: src/, framework/, support/)
 │   │
 │   ├── api/                          # API testing domain
-│   │   ├── __init__.py
 │   │   ├── action_layer.py           # Action Layer: API business actions
 │   │   │                             # - Atomic: create_object_and_verify()
 │   │   │                             # - Composite: perform_device_upgrade()
 │   │   │                             # - Self-verification in every method
 │   │   │
 │   │   └── physical_layer.py         # Physical Layer: HTTP client wrapper
-│   │                                 # - Pure execution: get(), post(), put(), delete()
+│   │                                 # - Pure execution only
 │   │                                 # - No assertions, no business logic
 │   │
 │   ├── web/                          # Web/UI testing domain
-│   │   ├── __init__.py
 │   │   ├── action_layer.py           # Action Layer: UI business actions
 │   │   │                             # - navigate_to_home_and_verify_title()
 │   │   │                             # - search_and_verify_results_not_empty()
 │   │   │
 │   │   ├── physical_layer.py         # Physical Layer: browser driver wrapper
-│   │   │                             # - Pure execution: click(), fill(), goto()
+│   │   │                             # - Pure execution only
 │   │   │                             # - No assertions, no business logic
 │   │   │
 │   │   └── constants.py              # UI selectors and URLs
+│   │                                 # (could also be: selectors.py, locators.py, pages.py)
 │   │                                 # - Centralized selector management
-│   │                                 # - One place to update when UI changes
 │   │
 │   └── __init__.py
 │
 ├── tests/                            # Test Layer (100% declarative)
 │   │
 │   ├── api/
-│   │   ├── __init__.py
 │   │   ├── test_basic_crud.py        # Basic CRUD test scenarios
 │   │   └── test_business_workflows.py # Composite workflow scenarios
 │   │
 │   ├── web/
-│   │   ├── __init__.py
 │   │   └── test_search_flows.py      # Web UI test scenarios
 │   │
 │   └── conftest.py                   # Shared fixtures
@@ -51,69 +50,64 @@ project-root/
 │                                     # - No business logic
 │
 ├── config/                           # Environment configuration (optional)
-│   ├── dev.yaml
-│   ├── staging.yaml
-│   └── production.yaml
 │
 ├── requirements.txt                  # Dependencies
-├── pytest.ini                        # Test runner configuration (or equivalent)
 └── README.md                         # Project documentation
 ```
 
 ## Layer Placement Rules
 
-| Content Type | Belongs In | Never In |
-|-------------|------------|----------|
-| Test scenarios | `tests/` | `lib/` |
-| Business actions + verification | `lib/*/action_layer.py` | `tests/`, `physical_layer.py` |
-| System interaction wrappers | `lib/*/physical_layer.py` | `tests/`, `action_layer.py` |
-| UI selectors / URLs | `lib/*/constants.py` | Scattered across any file |
-| Test fixtures / setup | `tests/conftest.py` | `lib/` action files |
-| Environment config | `config/` | Hardcoded in code |
+The key question for any piece of code is: which layer's responsibility does this belong to?
+
+| Content Type | Layer | Must NOT appear in |
+|-------------|-------|--------------------|
+| Test scenarios | Test Layer | Action or Physical files |
+| Business actions + self-verification | Action Layer | Test files or Physical Layer |
+| System interaction wrappers | Physical Layer | Test files or Action Layer |
+| UI selectors / URLs | Constants file (part of Physical domain) | Scattered across multiple files |
+| Test fixtures / setup | Test configuration (e.g. conftest) | Action Layer files |
+| Environment config | Config directory | Hardcoded in code |
 
 ## Scaling the Structure
 
 ### Small project (< 50 tests)
 
-Single action layer file per domain is sufficient:
+A single file per layer per domain is sufficient. No need for subdirectories.
 
 ```
-lib/
-├── api/
-│   ├── action_layer.py      # All API actions in one file
-│   └── physical_layer.py
+lib/api/
+├── actions.py           # All API actions (atomic + composite) in one file
+└── client.py            # Physical Layer: HTTP client wrapper
 ```
 
 ### Medium project (50-200 tests)
 
-Split action layer by business domain:
+Split the Action Layer by business domain as it grows:
 
 ```
-lib/
-├── api/
-│   ├── actions/
-│   │   ├── user_actions.py       # User CRUD actions
-│   │   ├── order_actions.py      # Order workflow actions
-│   │   └── payment_actions.py    # Payment actions
-│   └── physical_layer.py
+lib/api/
+├── actions/
+│   ├── user_actions.py       # User CRUD actions
+│   ├── order_actions.py      # Order workflow actions
+│   └── payment_actions.py    # Payment actions
+└── client.py                 # Physical Layer stays as one file
 ```
 
 ### Large project (200+ tests)
 
-Add composite actions directory and shared base classes:
+Separate composite workflows from atomic actions, and add shared base classes:
 
 ```
-lib/
-├── api/
-│   ├── actions/
-│   │   ├── base_action.py        # Shared action utilities
-│   │   ├── user_actions.py
-│   │   ├── order_actions.py
-│   │   └── payment_actions.py
-│   ├── composites/
-│   │   ├── checkout_flow.py      # Multi-step business workflows
-│   │   └── onboarding_flow.py
-│   └── physical_layer.py
+lib/api/
+├── actions/
+│   ├── base.py               # Shared action utilities
+│   ├── user_actions.py
+│   ├── order_actions.py
+│   └── payment_actions.py
+├── workflows/                # (or: composites/, flows/)
+│   ├── checkout_flow.py      # Multi-step business workflows
+│   └── onboarding_flow.py
+└── client.py                 # Physical Layer
 ```
 
 ## Fixture / Configuration Patterns
@@ -164,23 +158,14 @@ TestCRUD(BaseAPITest):
 
 ## Multi-Domain Projects
 
-For projects testing multiple interfaces (API + Web + Mobile):
+For projects testing multiple interfaces (API + Web + Mobile), each domain gets its own complete Action + Physical stack. The Test Layer can compose across domains.
 
 ```
 lib/
-├── api/                    # API domain
-│   ├── action_layer.py
-│   └── physical_layer.py
-├── web/                    # Web domain
-│   ├── action_layer.py
-│   ├── physical_layer.py
-│   └── constants.py
-├── mobile/                 # Mobile domain
-│   ├── action_layer.py
-│   ├── physical_layer.py
-│   └── constants.py
-└── shared/                 # Cross-domain utilities
-    └── data_helpers.py     # Data generation, format conversion (no system calls)
+├── api/                    # API domain — own Action + Physical stack
+├── web/                    # Web domain — own Action + Physical stack
+├── mobile/                 # Mobile domain — own Action + Physical stack
+└── shared/                 # Cross-domain data helpers (no system calls)
 ```
 
-Each domain has its own complete Action + Physical stack. The Test Layer can compose across domains if needed.
+File names within each domain follow the same principle: one file (or directory) clearly identifiable as the Action Layer, one as the Physical Layer. The exact names (`actions.py`, `client.py`, `driver.py`, `browser.py`) are up to the team — consistency within a project matters more than following a universal naming scheme.
