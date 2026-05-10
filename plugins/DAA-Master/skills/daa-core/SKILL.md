@@ -78,11 +78,12 @@ perform_device_upgrade(url, old_id, new_name):
 The Physical Layer is a **"dumb" driver**. It knows HOW to talk to the system but knows NOTHING about business logic.
 
 **Iron Rules:**
-- **Pure execution**: No assertions, no business logic, no conditionals
-- **Thin wrapper**: Direct delegation to underlying library (HTTP client, WebDriver, Playwright)
+- **No business logic**: No assertions on outcomes, no branching on domain semantics, no domain-specific error raising
+- **Scoped logic only**: Conditionals, retries, or `try/catch` are permitted only when they serve the Physical Layer's own concerns (connection management, transport-level recovery, hardware settling waits) — never to interpret business state
+- **Thin wrapper**: Methods stay focused on one primitive operation, delegating to the underlying library (HTTP client, WebDriver, Playwright)
 
 ```
-// Physical Layer — pure wrapper, zero logic
+// Physical Layer — thin wrapper, no business logic
 get(url, params=None):
     return http_client.get(url, params=params)
 

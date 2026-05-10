@@ -69,14 +69,14 @@ Review each item. Mark as PASS, FAIL, or N/A. Any CRITICAL FAIL must be resolved
 
 ## Physical Layer Checklist
 
-### Pure Execution (CRITICAL)
+### Business Logic Boundary (CRITICAL)
 
-- [ ] **PL-1**: No `assert` / `expect` / `should` statements
-- [ ] **PL-2**: No `if` / `else` / `switch` conditionals
-- [ ] **PL-3**: No `for` / `while` loops
-- [ ] **PL-4**: No `try` / `catch` error handling (let errors propagate)
-- [ ] **PL-5**: No retry logic
-- [ ] **PL-6**: No data transformation or business decisions
+- [ ] **PL-1**: No `assert` / `expect` / `should` statements (assertions encode business expectations — belong in Action Layer)
+- [ ] **PL-2**: No branching on domain semantics (e.g., `if response.body.role == "admin"`)
+- [ ] **PL-3**: No domain-specific exceptions raised (e.g., `raise UserAlreadyExists()`)
+- [ ] **PL-4**: No business-level data transformation or interpretation
+- [ ] **PL-5**: Any `try` / `catch`, retry, or conditional serves only Physical Layer's own scope (connection management, transport recovery, settling waits) — never business state
+- [ ] **PL-6**: Passes the dividing test: this logic would exist even if the caller's business domain were completely different
 
 ### Thin Wrapping (WARNING)
 

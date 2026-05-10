@@ -52,25 +52,36 @@ click_save_and_verify_confirmation():
 
 ### AP-3: Business Logic in the Physical Layer
 
-**Symptom**: Conditionals, assertions, or business decisions in the Physical Layer.
+**Symptom**: The Physical Layer makes decisions about *business meaning* — asserting expected outcomes, branching on domain semantics, or raising domain-specific errors.
+
+**What is still allowed**: Logic that serves the Physical Layer's own scope — connection/session management, transport-level retries on transient transport errors, `try/catch` that normalizes low-level hardware/IO errors, settling waits required by the underlying protocol.
+
+The dividing test: *would this logic exist even if the caller's business domain were completely different?* If yes, it's a Physical concern. If it encodes what the data means to the application, it belongs in the Action Layer.
 
 ```
-// VIOLATION — Physical Layer making business decisions
+// VIOLATION — encoding business meaning
 post(url, data):
     response = http_client.post(url, json=data)
-    if response.status == 429:        // Business logic!
-        sleep(5)
-        response = http_client.post(url, json=data)
-    assert response.status == 201     // Assertion doesn't belong here!
+    assert response.status == 201                       // business expectation
+    if response.body.error_code == "USER_EXISTS":       // domain interpretation
+        raise UserAlreadyExists()
     return response
 ```
 
-**Fix**: Physical Layer is pure execution. Move all logic to Action Layer.
+**Fix**: Keep the Physical Layer scoped to "make the call work." Move all business interpretation to the Action Layer.
 
 ```
-// CORRECT — Pure execution
+// CORRECT — pure execution
 post(url, data):
     return http_client.post(url, json=data)
+
+// ALSO CORRECT — physical-scope recovery (no business interpretation)
+post(url, data):
+    try:
+        return http_client.post(url, json=data, timeout=30)
+    except ConnectionResetError:
+        self._reconnect()
+        return http_client.post(url, json=data, timeout=30)
 ```
 
 ## Warning Anti-Patterns (Hurt Maintainability)

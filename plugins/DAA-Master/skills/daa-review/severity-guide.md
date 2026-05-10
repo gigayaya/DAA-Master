@@ -10,7 +10,7 @@ Violations that **break DAA fundamentals** and directly lead to false positives,
 |------|-----------|--------------|---------|
 | AP-1 | Logic in Test Layer | Tests become procedural scripts; lose readability and declarative value | `if page.title != "Home": skip()` in test method |
 | AP-2 | Missing self-verification | Actions that don't verify success cause **false positives** — tests pass but nothing was actually validated | `click_save()` without checking save succeeded |
-| AP-3 | Business logic in Physical Layer | Physical Layer becomes untestable and tightly coupled; breaks swappability | `if status == 429: retry()` in HTTP wrapper |
+| AP-3 | Business logic in Physical Layer | Physical Layer becomes untestable and tightly coupled; breaks swappability | `assert response.status == 201` or `if body.error_code == "USER_EXISTS": raise ...` in HTTP wrapper (note: transport-level retries on transient connection errors are NOT a violation) |
 | CL-1 | Layer skipping | Bypassing Action Layer means no self-verification — equivalent to AP-2 | Test method calling `http.post()` directly |
 | PL-1 | Assertions in Physical Layer | Assertions in wrong layer create confusing failures and break separation | `assert response.ok` in HTTP client |
 

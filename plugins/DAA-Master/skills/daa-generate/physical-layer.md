@@ -16,15 +16,21 @@ PhysicalLayerClass:
 
 ## Rules
 
-### R1: Pure Execution — Zero Intelligence
+### R1: No Business Logic — Stay in Physical Scope
 
-The Physical Layer must contain:
-- **NO assertions** (`assert`, `expect`, `should`, etc.)
-- **NO conditionals** (`if`, `switch`, ternary)
-- **NO loops** (`for`, `while`)
-- **NO error handling** (`try/catch`) — let errors propagate to Action Layer
-- **NO business logic** (no data transformation, no decision-making)
-- **NO retry logic** — retries are a business decision for the Action Layer
+The Physical Layer must NOT contain:
+- **Business assertions** (`assert response.status == 201`, expecting a specific business outcome)
+- **Domain branching** (decisions based on what the data means to the application)
+- **Domain-specific error raising** (e.g., `raise UserAlreadyExists()`)
+- **Business-level data transformation** (interpreting fields by their domain meaning)
+
+The Physical Layer MAY contain logic that serves its own scope:
+- **Connection/session management** (reconnect on disconnect, pool checkout)
+- **Transport-level retries** on transient transport errors (e.g., `ConnectionResetError`, socket timeout)
+- **`try/catch`** that normalizes low-level hardware/IO errors into a consistent transport exception
+- **Settling waits** required by the underlying protocol or device
+
+The dividing test: *would this logic exist even if the caller's business domain were completely different?* If yes, it belongs here. If it encodes what the data means to the application, it belongs in the Action Layer.
 
 ### R2: Thin Wrapping
 
@@ -185,4 +191,4 @@ BrowserDriver:
         self.page.wait_for_selector(selector)
 ```
 
-Notice: every method is a 1-line delegation. No logic, no assertions, no decisions.
+Notice: every method here is a 1-line delegation with no business logic. Physical-scope concerns (connection recovery, transport-level retries, settling waits) may add lines when needed — but business assertions and domain branching never belong here.
